@@ -35,7 +35,7 @@ jobs:
           piper-version: master
 
       - name: test
-        if: contains(steps.java-mta-build, "BUILD SUCCESS")
+        if: contains(steps.java-mta-build, 'BUILD SUCCESS')
         run: echo success
 
       - name: mavenExecuteIntegration

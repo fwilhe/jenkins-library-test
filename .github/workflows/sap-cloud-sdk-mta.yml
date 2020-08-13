@@ -37,6 +37,7 @@ jobs:
         with:
           command: mavenExecuteIntegration
           piper-version: master
+      - run: mvn clean
 
       - uses: 'actions/upload-artifact@v2'
         with:
@@ -60,7 +61,6 @@ jobs:
           command: mtaBuild
           piper-version: master
 
-      - run: mvn clean
   
       - uses: 'actions/upload-artifact@v2'
         with:

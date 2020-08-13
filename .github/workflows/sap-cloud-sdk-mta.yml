@@ -84,7 +84,7 @@ jobs:
         with:
           name: Cloud SDK Java MTA project template cf-tomee
           path: ${{ github.workspace }}/mta-java-tomee
-      - run: zip -r mta-java-spring.zip mta-java-tomee
+      - run: zip -r mta-java-tomee.zip mta-java-tomee
 
       - uses: actions/download-artifact@v2
         with:

@@ -6,15 +6,9 @@ jobs:
   test-sdk-mta:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         archetype: ['cf-spring', 'cf-tomee']
     steps:
-      - name: Setup java
-        uses: joschi/setup-jdk@v2
-        with:
-          java-version: 8
-          architecture: x64
       - run: mvn -v
       - name: Generate test project
         run: |
@@ -37,7 +31,8 @@ jobs:
         with:
           command: mavenExecuteIntegration
           piper-version: master
-      - run: mvn clean
+
+      - run: mvn clean; rm demo.mtar
 
       - uses: 'actions/upload-artifact@v2'
         with:
@@ -61,7 +56,7 @@ jobs:
           command: mtaBuild
           piper-version: master
 
-      - run: rm -rf node_modules *.mta
+      - run: rm -rf node_modules mta-js-demo.mtar
   
       - uses: 'actions/upload-artifact@v2'
         with:

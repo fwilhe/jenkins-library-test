@@ -27,28 +27,22 @@ jobs:
       - run: curl -L "https://github.com/SAP/cloud-mta-build-tool/releases/download/v1.0.15/cloud-mta-build-tool_1.0.15_Linux_amd64.tar.gz" | sudo tar -zx -C /usr/local/bin
 
       - name: mtaBuild
-        id: java-mta-build
         uses: SAP/project-piper-action@master
         with:
           command: mtaBuild
           flags: "--installArtifacts"
           piper-version: master
 
-      - name: test
-        if: contains(steps.java-mta-build.outputs.output, 'BUILD SUCCESS')
-        run: echo success
-
       - name: mavenExecuteIntegration
-        id: java-integration-test
         uses: SAP/project-piper-action@master
         with:
           command: mavenExecuteIntegration
           piper-version: master
 
-      - name: test
-        if: contains(steps.java-integration-test.outputs.output, 'BUILD SUCCESS')
-        run: echo success
-
+      - uses: 'actions/upload-artifact@v2'
+        with:
+            name: Cloud SDK Java MTA project template ${{ matrix.archetype }}
+            path: ${{ github.workspace }}
 
   test-sdk-mta-js:
     runs-on: ubuntu-latest
@@ -67,4 +61,43 @@ jobs:
           command: mtaBuild
           piper-version: master
 
+      - run: mvn clean
+  
+      - uses: 'actions/upload-artifact@v2'
+        with:
+            name: Cloud SDK JS MTA project template
+            path: ${{ github.workspace }}
 
+  release:
+    name: Upload Release Asset
+    runs-on: ubuntu-latest
+    needs: [test-sdk-mta, test-sdk-mta-js]
+    steps:
+      - name: Get Time
+        id: time
+        uses: nanzm/get-time-action@v1.0
+        with:
+          timeZone: 8
+          format: 'YYYY-MM-DD-HH-mm-ss'
+      - uses: actions/download-artifact@v2
+        with:
+          name: Cloud SDK JS MTA project template
+          path: ${{ github.workspace }}/mta-js
+      - run: zip -r mta-js.zip mta-js
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.time.outputs.time }}
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./mta-js.zip
+          asset_name: mta-js.zip
+          asset_content_type: application/zip

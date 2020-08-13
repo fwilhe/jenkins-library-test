@@ -12,7 +12,7 @@ jobs:
       - run: mvn -v
       - name: Generate test project
         run: |
-          mvn archetype:generate -B -DarchetypeGroupId=com.sap.cloud.sdk.archetypes -DgroupId=mydemo -DartifactId=cloud-sdk-${{ matrix.archetype }}-archetype -DskipUsageAnalytics=true -Dversion=1.0 -DarchetypeArtifactId=scp-${{ matrix.archetype }} -DarchetypeVersion=3.25.0
+          mvn archetype:generate -B -DarchetypeGroupId=com.sap.cloud.sdk.archetypes -DgroupId=mydemo -DartifactId=cloud-sdk-${{ matrix.archetype }}-archetype -DskipUsageAnalytics=true -Dversion=1.0 -DarchetypeArtifactId=scp-${{ matrix.archetype }} -DarchetypeVersion=LATEST
           cp -r cloud-sdk-${{ matrix.archetype }}-archetype/* .
           rm -rf cloud-sdk-${{ matrix.archetype }}-archetype
           wget https://gist.githubusercontent.com/fwilhe/0bc0848e9cc2487114c3c96060acbfc7/raw/2639331f9a1502c487000017f7b70db25b825ff6/mta-${{ matrix.archetype }}.yaml
@@ -82,6 +82,12 @@ jobs:
 
       - uses: actions/download-artifact@v2
         with:
+          name: Cloud SDK Java MTA project template cf-tomee
+          path: ${{ github.workspace }}/mta-java-tomee
+      - run: zip -r mta-java-spring.zip mta-java-tomee
+
+      - uses: actions/download-artifact@v2
+        with:
           name: Cloud SDK JS MTA project template
           path: ${{ github.workspace }}/mta-js
       - run: zip -r mta-js.zip mta-js
@@ -111,4 +117,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: ./mta-java-spring.zip
           asset_name: mta-java-spring.zip
+          asset_content_type: application/zip
+      - name: Upload Release Asset
+        id: upload-release-asset-tomee
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./mta-java-tomee.zip
+          asset_name: mta-java-tomee.zip
           asset_content_type: application/zip

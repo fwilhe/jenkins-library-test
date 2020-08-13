@@ -9,12 +9,11 @@ jobs:
       fail-fast: false
       matrix:
         archetype: ['cf-spring', 'cf-tomee']
-        java: [ '8', '11' ]
     steps:
       - name: Setup java
         uses: joschi/setup-jdk@v2
         with:
-          java-version: ${{ matrix.java }}
+          java-version: 8
           architecture: x64
       - run: mvn -v
       - name: Generate test project
@@ -81,6 +80,12 @@ jobs:
           format: 'YYYY-MM-DD-HH-mm-ss'
       - uses: actions/download-artifact@v2
         with:
+          name: Cloud SDK Java MTA project template cf-spring
+          path: ${{ github.workspace }}/mta-java-spring
+      - run: zip -r mta-java-spring.zip mta-java-spring
+
+      - uses: actions/download-artifact@v2
+        with:
           name: Cloud SDK JS MTA project template
           path: ${{ github.workspace }}/mta-js
       - run: zip -r mta-js.zip mta-js
@@ -100,4 +105,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: ./mta-js.zip
           asset_name: mta-js.zip
+          asset_content_type: application/zip
+      - name: Upload Release Asset
+        id: upload-release-asset-spring
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./mta-java-spring.zip
+          asset_name: mta-java-spring.zip
           asset_content_type: application/zip

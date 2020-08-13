@@ -61,6 +61,7 @@ jobs:
           command: mtaBuild
           piper-version: master
 
+      - run: rm -rf node_modules *.mta
   
       - uses: 'actions/upload-artifact@v2'
         with:

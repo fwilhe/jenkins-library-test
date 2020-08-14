@@ -57,7 +57,7 @@ jobs:
           piper-version: master
 
       - run: rm -rf node_modules mta-js-demo.mtar
-  
+
       - uses: 'actions/upload-artifact@v2'
         with:
             name: Cloud SDK js MTA project template
@@ -77,6 +77,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.time.outputs.time }}
+      - run: echo ${{ steps.create_release.outputs.upload_url }} > upload-url.txt
+      - name: Upload url result for job 1
+        uses: actions/upload-artifact@v1
+        with:
+          name: url
+          path: upload-url.txt
+
 
   release-artifacts:
     name: Upload Release Asset
@@ -92,13 +99,20 @@ jobs:
           path: ${{ github.workspace }}/${{ matrix.archetype }}
       - run: zip -r mta-${{ matrix.archetype }}.zip ${{ matrix.archetype }}
 
+      - name: Download url
+        uses: actions/download-artifact@v1
+        with:
+          name: url
+      - name: get url
+        id: url
+        run: echo "::set-output name=upload_url::`cat upload-url.txt`"
       - name: Upload Release Asset
-        id: upload-release-asset 
+        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          upload_url: ${{ steps.url.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
           asset_path: ./mta-${{ matrix.archetype }}.zip
           asset_name: mta-${{ matrix.archetype }}.zip
           asset_content_type: application/zip

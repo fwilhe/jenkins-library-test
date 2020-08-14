@@ -105,7 +105,7 @@ jobs:
           name: url
       - name: get url
         id: url
-        run: echo "::set-output name=upload_url::`cat upload-url.txt`"
+        run: echo "::set-output name=upload_url::`cat url/upload-url.txt`"
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1

@@ -63,9 +63,14 @@ jobs:
             name: Cloud SDK js MTA project template
             path: ${{ github.workspace }}
 
-  create-release:
+
+  release:
+    name: Upload Release Asset
     runs-on: ubuntu-latest
     needs: [test-sdk-mta, test-sdk-mta-js]
+    strategy:
+      matrix:
+        archetype: ['cf-spring', 'cf-tomee', js]
     steps:
       - name: get timestamp
         id: time
@@ -77,15 +82,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.time.outputs.time }}
-
-  release-artifacts:
-    name: Upload Release Asset
-    runs-on: ubuntu-latest
-    needs: create-release
-    strategy:
-      matrix:
-        archetype: ['cf-spring', 'cf-tomee', js]
-    steps:
       - uses: actions/download-artifact@v2
         with:
           name: Cloud SDK ${{ matrix.archetype }} MTA project template

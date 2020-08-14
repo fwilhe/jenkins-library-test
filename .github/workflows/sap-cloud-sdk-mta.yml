@@ -36,7 +36,7 @@ jobs:
 
       - uses: 'actions/upload-artifact@v2'
         with:
-            name: Cloud SDK Java MTA project template ${{ matrix.archetype }}
+            name: Cloud SDK ${{ matrix.archetype }} MTA project template
             path: ${{ github.workspace }}
 
   test-sdk-mta-js:
@@ -60,37 +60,16 @@ jobs:
   
       - uses: 'actions/upload-artifact@v2'
         with:
-            name: Cloud SDK JS MTA project template
+            name: Cloud SDK js MTA project template
             path: ${{ github.workspace }}
 
-  release:
-    name: Upload Release Asset
+  create-release:
     runs-on: ubuntu-latest
     needs: [test-sdk-mta, test-sdk-mta-js]
     steps:
-      - name: Get Time
+      - name: get timestamp
         id: time
-        uses: nanzm/get-time-action@v1.0
-        with:
-          timeZone: 8
-          format: 'YYYY-MM-DD-HH-mm-ss'
-      - uses: actions/download-artifact@v2
-        with:
-          name: Cloud SDK Java MTA project template cf-spring
-          path: ${{ github.workspace }}/mta-java-spring
-      - run: zip -r mta-java-spring.zip mta-java-spring
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: Cloud SDK Java MTA project template cf-tomee
-          path: ${{ github.workspace }}/mta-java-tomee
-      - run: zip -r mta-java-tomee.zip mta-java-tomee
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: Cloud SDK JS MTA project template
-          path: ${{ github.workspace }}/mta-js
-      - run: zip -r mta-js.zip mta-js
+        run: echo "::set-output name=time::`date -u +\"%Y-%m-%dT%H-%M-%S%Z\"`"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -98,6 +77,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.time.outputs.time }}
+
+  release-artifacts:
+    name: Upload Release Asset
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      matrix:
+        archetype: ['cf-spring', 'cf-tomee', js]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: Cloud SDK ${{ matrix.archetype }} MTA project template
+          path: ${{ github.workspace }}/${{ matrix.archetype }}
+      - run: zip -r mta-${{ matrix.archetype }}.zip ${{ matrix.archetype }}
+
       - name: Upload Release Asset
         id: upload-release-asset 
         uses: actions/upload-release-asset@v1
@@ -105,26 +99,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./mta-js.zip
-          asset_name: mta-js.zip
-          asset_content_type: application/zip
-      - name: Upload Release Asset
-        id: upload-release-asset-spring
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./mta-java-spring.zip
-          asset_name: mta-java-spring.zip
-          asset_content_type: application/zip
-      - name: Upload Release Asset
-        id: upload-release-asset-tomee
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./mta-java-tomee.zip
-          asset_name: mta-java-tomee.zip
+          asset_path: ./mta-${{ matrix.archetype }}.zip
+          asset_name: mta-${{ matrix.archetype }}.zip
           asset_content_type: application/zip
